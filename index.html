@@ -60,5 +60,29 @@ function exportCSV(from,to){let arr=db.sales.filter(s=>s.date>=from&&s.date<=to)
 // Render tables after the page template has been inserted.
 const originalRender=render;render=function(){originalRender();if(page==='servicios')renderRepairRows();if(page==='ventas')renderSaleRows();if(page==='inventario')renderInvRows();if(page==='clientes')renderClientRows();if(page==='caja')renderExpenseRows();if(page==='reportes')reportRows()};
 function renderSaleRows(){let arr=db.sales.slice(0,30);document.getElementById('saleRows').innerHTML=arr.length?`<div class="tablewrap"><table><tr><th>Fecha</th><th>Comprobante</th><th>Cliente</th><th>Producto</th><th>Total</th><th>Utilidad estimada</th><th>Acción</th></tr>${arr.map(s=>`<tr><td>${dateLabel(s.date)}</td><td>#${s.id}</td><td>${esc(s.clientName||'Mostrador')}<br>${esc(s.clientPhone)}</td><td>${esc(s.name)} × ${s.qty}</td><td>${money(s.total)}</td><td>${money(s.profit)}</td><td><button class="small secondary" onclick="printSale(db.sales.find(x=>x.id===${s.id}))">Factura</button></td></tr>`).join('')}</table></div>`:'<div class="empty">No hay ventas registradas.</div>'}
-// First paint after login.
+// First paint after login.<!-- Firebase App (Core) SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<!-- Firebase Realtime Database SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script>
+  // Configuración de Firebase para MiguelCel
+  const firebaseConfig = {
+    apiKey: "AIzaSyCE5d-CmKwQt-4PRNHMFtTx_NeZl4Eefw",
+    authDomain: "miguelcel-db.firebaseapp.com",
+    databaseURL: "https://miguelcel-db-default-rtdb.firebaseio.com",
+    projectId: "miguelcel-db",
+    storageBucket: "miguelcel-db.appspot.com",
+    messagingSenderId: "59753367990",
+    appId: "1:59753367990:web:0f6dac19426789d07e1917"
+  };
+
+  // Inicializar Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+
+
+
+
 </script></body></html>
