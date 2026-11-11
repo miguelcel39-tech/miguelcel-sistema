@@ -11,6 +11,7 @@
 .login{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999}.loginbox{background:var(--white);padding:30px;border-radius:14px;width:320px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}.stat{background:var(--white);border:1px solid var(--line);border-radius:11px;padding:18px}.stat b{display:block;font-size:24px;margin-top:5px;color:var(--navy)}
 table{width:100%;border-collapse:collapse}th,td{padding:10px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--muted)}
+input[type="text"], input[type="number"]{width:100%;padding:10px;margin-top:5px;margin-bottom:15px;border:1px solid var(--line);border-radius:8px}
 </style>
 </head>
 <body>
@@ -32,21 +33,44 @@ const KEY='miguelcel_gestion_v1';let db=load();let currentUser=null;let page='in
 function fresh(){return {users:[{id:1,name:'Administrador',pin:'1234',role:'admin',active:true}],clients:[],repairs:[],products:[],sales:[],expenses:[],movements:[],next:{client:1,repair:1,product:1,sale:1,expense:1,movement:1}}}
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){return fresh()}}
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
-function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;u0027'}[c]))}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function money(n){return '$'+Number(n||0).toLocaleString('es-CO')}
 function login(){let pin=document.getElementById('loginPin').value;let u=db.users.find(x=>x.active&&x.pin===pin);if(!u){alert('PIN incorrecto');return}currentUser=u;document.getElementById('login').style.display='none';renderApp()}
 function logout(){currentUser=null;document.getElementById('login').style.display='flex';document.getElementById('loginPin').value='';}
 function setPage(p){page=p;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));renderPage()}
 function renderApp(){document.getElementById('who').textContent=currentUser.name;document.getElementById('today').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});renderPage()}
+
 function renderPage(){
   let titles={inicio:'Panel principal',servicios:'Control de Taller y Equipos',ventas:'Registro de Ventas',inventario:'Control de Inventario',caja:'Caja y Movimientos',reportes:'Reportes Financieros',usuarios:'Gestión de Usuarios',config:'Configuración del Sistema'};
   document.getElementById('topTitle').textContent=titles[page]||'Panel';
   let c=document.getElementById('content');
+  
   if(page==='inicio'){
-    c.innerHTML=`<div class="cards"><div class="stat">Ventas hoy<b>${money(0)}</b></div><div class="stat">Equipos en taller<b>0</b></div><div class="stat">Productos en stock<b>${db.products.length}</b></div></div><div class="panel"><h3>Bienvenido al sistema</h3><p>Selecciona una opción en el menú lateral para empezar a trabajar.</p></div>`;
+    c.innerHTML=`<div class="cards"><div class="stat">Ventas hoy<b>${money(0)}</b></div><div class="stat">Equipos en taller<b>0</b></div><div class="stat">Productos en stock<b>${db.products.length}</b></div></div><div class="panel"><h3>Bienvenido al sistema</h3><p>Selecciona Inventario en el menú lateral para agregar productos.</p></div>`;
+  } else if(page==='inventario'){
+    let rows = db.products.map(p=>`<tr><td>${esc(p.name)}</td><td>$${p.cost}</td><td>$${p.price}</td><td>${p.stock}</td></tr>`).join('');
+    c.innerHTML=`<div class="panel"><h3>Agregar Nuevo Producto</h3>
+    <label>Nombre del producto:</label><input id="pName" type="text" placeholder="Ej: Cargador Tipo C">
+    <label>Costo ($):</label><input id="pCost" type="number" placeholder="0">
+    <label>Precio Venta ($):</label><input id="pPrice" type="number" placeholder="0">
+    <label>Cantidad en Stock:</label><input id="pStock" type="number" placeholder="1">
+    <button onclick="addProduct()">Guardar Producto</button></div>
+    <div class="panel"><h3>Inventario Actual</h3><table><tr><th>Producto</th><th>Costo</th><th>Precio</th><th>Stock</th></tr>${rows||'<tr><td colspan="4">No hay productos registrados.</td></tr>'}</table></div>`;
   } else {
-    c.innerHTML=`<div class="panel"><h3>${titles[page]}</h3><p>Módulo activo y listo para operar.</p></div>`;
+    c.innerHTML=`<div class="panel"><h3>${titles[page]}</h3><p>Módulo activo.</p></div>`;
   }
+}
+
+function addProduct(){
+  let name=document.getElementById('pName').value.trim();
+  let cost=Number(document.getElementById('pCost').value);
+  let price=Number(document.getElementById('pPrice').value);
+  let stock=Number(document.getElementById('pStock').value);
+  if(!name){alert('Escribe el nombre del producto');return;}
+  db.products.push({id:db.next.product++, name, cost, price, stock});
+  save();
+  renderPage();
+  alert('¡Producto agregado con éxito!');
 }
 </script>
 
@@ -55,7 +79,6 @@ function renderPage(){
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
 <script>
-  // Configuración de Firebase para MiguelCel
   const firebaseConfig = {
     apiKey: "AIzaSyCE5d-CmKwQt-4PRNHMFtTx_NeZl4Eefw",
     authDomain: "miguelcel-db.firebaseapp.com",
@@ -65,8 +88,6 @@ function renderPage(){
     messagingSenderId: "59753367990",
     appId: "1:59753367990:web:0f6dac19426789d07e1917"
   };
-
-  // Inicializar Firebase
   firebase.initializeApp(firebaseConfig);
   const db_fb = firebase.database();
 </script>
