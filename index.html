@@ -5,29 +5,49 @@
 <title>MiguelCel Tecnologia Digital | Gestión</title>
 <style>
 :root{--navy:#102b50;--blue:#1675d1;--sky:#eaf4ff;--ink:#1b2a3a;--muted:#65758a;--line:#dce5ef;--bg:#f4f7fb;--white:#fff;--green:#138451;--red:#bd3d43;--amber:#a96908}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:9px;padding:10px 14px;background:var(--blue);color:#fff;font-weight:700}button.secondary{background:#e8f0f8;color:var(--navy)}button.small{padding:6px 9px;font-size:12px}.shell{display:grid;grid-template-columns:235px 1fr;min-height:100vh}.side{background:var(--navy);color:#fff;padding:22px}
-@media(max-width:900px){.shell{grid-template-columns:1fr}.side{height:auto;position:relative;padding:13px}.brand{font-size:17px}.nav{display:flex;overflow:auto;margin-top:12px}.nav button{white-space:nowrap;margin-right:8px}}
-@media(max-width:520px){.cards{grid-template-columns:1fr}.stat{padding:12px}.stat b{font-size:19px}.formgrid{grid-template-columns:1fr}.field.full{grid-column:span 1}.pagehead{align-items:flex-start;flex-direction:column;gap:10px}}
-@media print{.side,.top,.no-print,button{display:none}!important}.shell{display:block}.content{padding:0}.panel,.stat{box-shadow:none;border:0}body{background:#fff}
+.brand{font-size:18px;font-weight:700;margin-bottom:25px}.brand small{display:block;font-size:11px;opacity:.7;font-weight:400}
+.nav{display:flex;flex-direction:column;gap:5px}.nav button{background:transparent;color:#bcd3f2;text-align:left;padding:11px;border-radius:7px;font-weight:600}.nav button:hover,.nav button.active{background:rgba(255,255,255,.1);color:#fff}
+.sidefoot{margin-top:40px;font-size:11px;opacity:.6;line-height:1.4}.main{display:flex;flex-direction:column}.top{background:var(--white);border-bottom:1px solid var(--line);padding:15px 25px;display:flex;justify-content:space-between;align-items:center}.content{padding:25px;flex:1}.panel{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px}
+.login{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999}.loginbox{background:var(--white);padding:30px;border-radius:14px;width:320px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}.stat{background:var(--white);border:1px solid var(--line);border-radius:11px;padding:18px}.stat b{display:block;font-size:24px;margin-top:5px;color:var(--navy)}
+table{width:100%;border-collapse:collapse}th,td{padding:10px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--muted)}
 </style>
 </head>
 <body>
 <div id="login" class="login"><div class="loginbox"><h2>MiguelCel Tecnologia Digital</h2><p class="muted">Ingresa con tu PIN de colaborador.</p><input id="loginPin" type="password" inputmode="numeric" maxlength="4" style="font-size:24px;letter-spacing:8px;text-align:center;width:100%;padding:12px;margin:15px 0;border:1px solid var(--line);border-radius:9px"><button onclick="login()" style="width:100%">Ingresar</button><p class="muted" style="margin-top:15px;font-size:12px">Primer ingreso: PIN administrador 1234. Cámbialo en Usuarios.</p></div></div>
 <div class="shell"><aside class="side"><div class="brand">MIGUELCEL <small>TECNOLOGÍA DIGITAL</small></div><div class="nav" id="nav">
-<button class="active" data-page="inicio">🏠 Inicio</button><button data-page="servicios">🛠 Taller / equipos</button><button data-page="ventas">+ Ventas</button><button data-page="inventario">📦 Inventario</button><button data-page="caja">💰 Caja</button><button data-page="reportes">📊 Reportes</button><button data-page="usuarios">👥 Usuarios</button><button data-page="config">⚙ Config</button></div><div class="sidefoot">Barrio El Carmelo · Frente a Abarrotes Zuluaga<br>301 778 8964 · 323 355 8078</div></aside>
+<button class="active" data-page="inicio" onclick="setPage('inicio')">🏠 Inicio</button>
+<button data-page="servicios" onclick="setPage('servicios')">🛠 Taller / equipos</button>
+<button data-page="ventas" onclick="setPage('ventas')">+ Ventas</button>
+<button data-page="inventario" onclick="setPage('inventario')">📦 Inventario</button>
+<button data-page="caja" onclick="setPage('caja')">💰 Caja</button>
+<button data-page="reportes" onclick="setPage('reportes')">📊 Reportes</button>
+<button data-page="usuarios" onclick="setPage('usuarios')">👥 Usuarios</button>
+<button data-page="config" onclick="setPage('config')">⚙ Config</button></div><div class="sidefoot">Barrio El Carmelo · Frente a Abarrotes Zuluaga<br>301 778 8964 · 323 355 8078</div></aside>
 <main class="main"><header class="top"><div class="topleft"><strong id="topTitle">Panel principal</strong><br><span id="today"></span></div><div class="topright">👤 <span id="who"></span> <button class="secondary small no-print" onclick="logout()">Salir</button></div></header>
 <div class="content" id="content"></div></main></div>
 
 <script>
-const KEY='miguelcel_gestion_v1';let db=load();let currentUser=null;let page='inicio';let editing=null;
+const KEY='miguelcel_gestion_v1';let db=load();let currentUser=null;let page='inicio';
 function fresh(){return {users:[{id:1,name:'Administrador',pin:'1234',role:'admin',active:true}],clients:[],repairs:[],products:[],sales:[],expenses:[],movements:[],next:{client:1,repair:1,product:1,sale:1,expense:1,movement:1}}}
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){return fresh()}}
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
-function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;u0027'}[c]))}
 function money(n){return '$'+Number(n||0).toLocaleString('es-CO')}
 function login(){let pin=document.getElementById('loginPin').value;let u=db.users.find(x=>x.active&&x.pin===pin);if(!u){alert('PIN incorrecto');return}currentUser=u;document.getElementById('login').style.display='none';renderApp()}
 function logout(){currentUser=null;document.getElementById('login').style.display='flex';document.getElementById('loginPin').value='';}
+function setPage(p){page=p;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));renderPage()}
 function renderApp(){document.getElementById('who').textContent=currentUser.name;document.getElementById('today').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});renderPage()}
-function renderPage(){let c=document.getElementById('content');c.innerHTML='<div class="panel"><h3>Panel principal</h3><p>Sistema cargado correctamente.</p></div>'}
+function renderPage(){
+  let titles={inicio:'Panel principal',servicios:'Control de Taller y Equipos',ventas:'Registro de Ventas',inventario:'Control de Inventario',caja:'Caja y Movimientos',reportes:'Reportes Financieros',usuarios:'Gestión de Usuarios',config:'Configuración del Sistema'};
+  document.getElementById('topTitle').textContent=titles[page]||'Panel';
+  let c=document.getElementById('content');
+  if(page==='inicio'){
+    c.innerHTML=`<div class="cards"><div class="stat">Ventas hoy<b>${money(0)}</b></div><div class="stat">Equipos en taller<b>0</b></div><div class="stat">Productos en stock<b>${db.products.length}</b></div></div><div class="panel"><h3>Bienvenido al sistema</h3><p>Selecciona una opción en el menú lateral para empezar a trabajar.</p></div>`;
+  } else {
+    c.innerHTML=`<div class="panel"><h3>${titles[page]}</h3><p>Módulo activo y listo para operar.</p></div>`;
+  }
+}
 </script>
 
 <!-- Librerías oficiales de Firebase -->
@@ -48,7 +68,7 @@ function renderPage(){let c=document.getElementById('content');c.innerHTML='<div
 
   // Inicializar Firebase
   firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  const db_fb = firebase.database();
 </script>
 
 </body>
