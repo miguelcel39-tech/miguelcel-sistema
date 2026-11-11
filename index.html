@@ -11,7 +11,8 @@
 .login{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999}.loginbox{background:var(--white);padding:30px;border-radius:14px;width:320px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}.stat{background:var(--white);border:1px solid var(--line);border-radius:11px;padding:18px}.stat b{display:block;font-size:24px;margin-top:5px;color:var(--navy)}
 table{width:100%;border-collapse:collapse}th,td{padding:10px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--muted)}
-input[type="text"], input[type="number"]{width:100%;padding:10px;margin-top:5px;margin-bottom:15px;border:1px solid var(--line);border-radius:8px}
+input[type="text"], input[type="number"], select, textarea{width:100%;padding:10px;margin-top:5px;margin-bottom:15px;border:1px solid var(--line);border-radius:8px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 </style>
 </head>
 <body>
@@ -46,18 +47,37 @@ function renderPage(){
   let c=document.getElementById('content');
   
   if(page==='inicio'){
-    c.innerHTML=`<div class="cards"><div class="stat">Ventas hoy<b>${money(0)}</b></div><div class="stat">Equipos en taller<b>0</b></div><div class="stat">Productos en stock<b>${db.products.length}</b></div></div><div class="panel"><h3>Bienvenido al sistema</h3><p>Selecciona Inventario en el menú lateral para agregar productos.</p></div>`;
+    let totalVentas=db.sales.reduce((a,b)=>a+Number(b.total||0),0);
+    c.innerHTML=`<div class="cards"><div class="stat">Ventas totales<b>${money(totalVentas)}</b></div><div class="stat">Equipos en taller<b>${db.repairs.length}</b></div><div class="stat">Productos en stock<b>${db.products.length}</b></div></div><div class="panel"><h3>Bienvenido al sistema</h3><p>Usa el menú lateral para registrar ventas, equipos, inventario y caja.</p></div>`;
   } else if(page==='inventario'){
     let rows = db.products.map(p=>`<tr><td>${esc(p.name)}</td><td>$${p.cost}</td><td>$${p.price}</td><td>${p.stock}</td></tr>`).join('');
     c.innerHTML=`<div class="panel"><h3>Agregar Nuevo Producto</h3>
     <label>Nombre del producto:</label><input id="pName" type="text" placeholder="Ej: Cargador Tipo C">
-    <label>Costo ($):</label><input id="pCost" type="number" placeholder="0">
-    <label>Precio Venta ($):</label><input id="pPrice" type="number" placeholder="0">
+    <div class="formgrid"><div><label>Costo ($):</label><input id="pCost" type="number" placeholder="0"></div><div><label>Precio Venta ($):</label><input id="pPrice" type="number" placeholder="0"></div></div>
     <label>Cantidad en Stock:</label><input id="pStock" type="number" placeholder="1">
     <button onclick="addProduct()">Guardar Producto</button></div>
     <div class="panel"><h3>Inventario Actual</h3><table><tr><th>Producto</th><th>Costo</th><th>Precio</th><th>Stock</th></tr>${rows||'<tr><td colspan="4">No hay productos registrados.</td></tr>'}</table></div>`;
+  } else if(page==='ventas'){
+    let rows = db.sales.map(s=>`<tr><td>${s.date||''}</td><td>${esc(s.client)}</td><td>${esc(s.product)}</td><td>${money(s.total)}</td></tr>`).join('');
+    c.innerHTML=`<div class="panel"><h3>Registrar Nueva Venta</h3>
+    <label>Nombre del Cliente:</label><input id="sClient" type="text" placeholder="Nombre del cliente">
+    <label>Producto o Servicio:</label><input id="sProduct" type="text" placeholder="Ej: Pantalla A38">
+    <div class="formgrid"><div><label>Cantidad:</label><input id="sQty" type="number" value="1"></div><div><label>Total Cobrado ($):</label><input id="sTotal" type="number" placeholder="0"></div></div>
+    <button onclick="addSale()">Registrar Venta</button></div>
+    <div class="panel"><h3>Historial de Ventas</h3><table><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Total</th></tr>${rows||'<tr><td colspan="4">No hay ventas registradas.</td></tr>'}</table></div>`;
+  } else if(page==='servicios'){
+    let rows = db.repairs.map(r=>`<tr><td>${esc(r.client)}</td><td>${esc(r.device)}</td><td>${esc(r.fault)}</td><td>${r.status||'Recibido'}</td></tr>`).join('');
+    c.innerHTML=`<div class="panel"><h3>Recibir Equipo en Taller</h3>
+    <label>Cliente:</label><input id="rClient" type="text" placeholder="Nombre del cliente">
+    <label>Equipo / Modelo:</label><input id="rDevice" type="text" placeholder="Ej: Redmi Note 13">
+    <label>Falla / Motivo:</label><textarea id="rFault" placeholder="Descripción del daño"></textarea>
+    <button onclick="addRepair()">Guardar Orden de Taller</button></div>
+    <div class="panel"><h3>Equipos en Taller</h3><table><tr><th>Cliente</th><th>Equipo</th><th>Falla</th><th>Estado</th></tr>${rows||'<tr><td colspan="4">No hay equipos en taller.</td></tr>'}</table></div>`;
+  } else if(page==='usuarios'){
+    let rows = db.users.map(u=>`<tr><td>${esc(u.name)}</td><td>${u.pin}</td><td>${u.role}</td></tr>`).join('');
+    c.innerHTML=`<div class="panel"><h3>Usuarios del Sistema</h3><table><tr><th>Nombre</th><th>PIN</th><th>Rol</th></tr>${rows}</table></div>`;
   } else {
-    c.innerHTML=`<div class="panel"><h3>${titles[page]}</h3><p>Módulo activo.</p></div>`;
+    c.innerHTML=`<div class="panel"><h3>${titles[page]}</h3><p>Módulo activo y listo.</p></div>`;
   }
 }
 
@@ -68,9 +88,26 @@ function addProduct(){
   let stock=Number(document.getElementById('pStock').value);
   if(!name){alert('Escribe el nombre del producto');return;}
   db.products.push({id:db.next.product++, name, cost, price, stock});
-  save();
-  renderPage();
-  alert('¡Producto agregado con éxito!');
+  save(); renderPage(); alert('¡Producto agregado con éxito!');
+}
+
+function addSale(){
+  let client=document.getElementById('sClient').value.trim()||'Mostrador';
+  let product=document.getElementById('sProduct').value.trim();
+  let qty=Number(document.getElementById('sQty').value)||1;
+  let total=Number(document.getElementById('sTotal').value);
+  if(!product){alert('Escribe el producto');return;}
+  db.sales.push({id:db.next.sale++, client, product, qty, total, date:new Date().toLocaleDateString('es-CO')});
+  save(); renderPage(); alert('¡Venta registrada con éxito!');
+}
+
+function addRepair(){
+  let client=document.getElementById('rClient').value.trim();
+  let device=document.getElementById('rDevice').value.trim();
+  let fault=document.getElementById('rFault').value.trim();
+  if(!client || !device){alert('Completa el cliente y el equipo');return;}
+  db.repairs.push({id:db.next.repair++, client, device, fault, status:'En taller'});
+  save(); renderPage(); alert('¡Equipo registrado en taller!');
 }
 </script>
 
